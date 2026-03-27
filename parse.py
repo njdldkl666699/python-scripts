@@ -104,17 +104,21 @@ BASE_DIR = Path(__file__).resolve().parent
 
 FIXTURE_COLORS = {
     112: "#f9f9f9",
-    1001: "#da6d42",
+    #
+    1001: "#da6d42",  # wood
     1002: "#da6d42",
     1003: "#da6d42",
     1004: "#da6d42",
-    2001: "#878685",
-    2002: "#d5750a",
-    2003: "#d5d5d5",
+    #
+    2001: "#878685",  # iron
+    2002: "#d5750a",  # copper
+    2003: "#d5d5d5",  # stone
     2004: "#a7c7cb",
     2005: "#9933cc",
+    #
     3001: "#c95a49",
-    4001: "#f8729a",
+    #
+    4001: "#f8729a",  # flower
     4002: "#f8729a",
     4003: "#f8729a",
     4004: "#f8729a",
@@ -122,7 +126,7 @@ FIXTURE_COLORS = {
     4006: "#f8729a",
     4007: "#f8729a",
     4008: "#f8729a",
-    4009: "#f8729a",
+    4009: "#f8729a",  # cotton
     4010: "#f8729a",
     4011: "#f8729a",
     4012: "#f8729a",
@@ -134,6 +138,7 @@ FIXTURE_COLORS = {
     4018: "#f8729a",
     4019: "#f8729a",
     4020: "#f8729a",
+    #
     5001: "#f6f5f2",
     5002: "#f6f5f2",
     5003: "#f6f5f2",
@@ -142,7 +147,9 @@ FIXTURE_COLORS = {
     5102: "#f6f5f2",
     5103: "#f6f5f2",
     5104: "#f6f5f2",
+    #
     6001: "#6f4e37",
+    #
     7001: "#a5d9ff",
 }
 
@@ -182,8 +189,7 @@ ITEM_TEXTURES = {
         64: "icon/Texture2D/item_mineral_9.png",
         65: "icon/Texture2D/item_mineral_10.png",
         66: "icon/Texture2D/item_junk_13.png",
-        67: "icon/Texture2D/item_junk_14.png",
-        68: "icon/Texture2D/item_junk_15.png",
+        93: "icon/Texture2D/item_junk_14.png",
     },
     "mysekai_item": {
         7: "icon/Texture2D/item_blueprint_fragment.png",
@@ -216,7 +222,7 @@ ITEM_TEXTURES = {
 
 
 RARE_ITEM = {
-    "mysekai_material": [5, 12, 20, 24, 32, 33, 61, 62, 63, 64, 65, 66],
+    "mysekai_material": [5, 12, 20, 24, 32, 33, 61, 62, 63, 64, 65, 66, 93],
     "mysekai_item": [7],
     "mysekai_music_record": [],
     "mysekai_fixture": [118, 119, 120, 121],
