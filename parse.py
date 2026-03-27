@@ -218,6 +218,10 @@ ITEM_TEXTURES = {
     "mysekai_music_record": {
         0: "icon/Texture2D/item_surplus_music_record.png",
     },
+    "material": {
+        17: "icon/Texture2D/material17.png",  # 心愿种子
+        170: "icon/Texture2D/material170.png",  # 世界碎片
+    },
 }
 
 
@@ -234,6 +238,7 @@ SUPER_RARE_ITEM = {
     "mysekai_item": [],
     "mysekai_fixture": [],
     "mysekai_music_record": [],
+    "material": [17, 170],
 }
 
 
