@@ -1,4 +1,6 @@
+import argparse
 import base64
+import sys
 
 
 def parse_thunder_link(thunder_link: str) -> str:
@@ -29,11 +31,20 @@ def parse_thunder_link(thunder_link: str) -> str:
     return original_url
 
 
-if __name__ == "__main__":
-    # Example usage
-    thunder_link = "thunder://QUFodHRwczovL2l0MzY1LmdpdGxhYi5pby96aC1jbi94dW5sZWktemgvWlo="
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Parse a Thunder link.")
+    parser.add_argument("link", help="Thunder link to parse.")
+    args = parser.parse_args(argv)
+
     try:
-        original_url = parse_thunder_link(thunder_link)
-        print("Original URL:", original_url)
-    except ValueError as e:
-        print("Error:", e)
+        original_url = parse_thunder_link(args.link)
+    except ValueError as exc:
+        sys.stderr.write(f"Error: {exc}\n")
+        return 1
+
+    sys.stdout.write(f"{original_url}\n")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
