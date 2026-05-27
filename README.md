@@ -2,7 +2,7 @@
 
 存放一些实用的 Python 小脚本。
 
-## thunder-link-parse
+## thunder_link_parse
 
 提供了一个用于解析迅雷链接的工具。
 
@@ -22,4 +22,14 @@ python thunder_link_parse.py thunder://<thunder_link>
 python markdown_toc.py <markdown_file>
 cat <markdown_file> | python markdown_toc.py
 python markdown_toc.py <markdown_file> > toc.md
+```
+
+## batch_paper_analyzer
+
+使用GitHub Copilot SDK批量分析论文，论文主题、目的、主要过程、结果结论，以及复现难度，并生成一个 Markdown 格式的报告。
+
+### Usage
+
+```bash
+python batch_paper_analyzer.py <paper_directory> -O <output_directory>
 ```
