@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket 图片接收器</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #status {
+      margin-bottom: 20px;
+      padding: 10px;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+
+    .connected {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .disconnected {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    .image-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      max-width: 1000px;
+      width: 100%;
+    }
+
+    .img-box {
+      background: #fff;
+      padding: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+    }
+
+    .img-box img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .img-box img:hover {
+      transform: scale(1.02);
+    }
+
+    .timestamp {
+      margin-top: 20px;
+      font-size: 0.9em;
+      color: #666;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.85);
+      z-index: 1000;
+      overflow: hidden;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal img {
+      max-width: 90%;
+      max-height: 90%;
+      cursor: grab;
+      transition: transform 0.1s ease-out;
+      -webkit-user-drag: none;
+      /* Prevent browser default drag */
+    }
+
+    .modal img:active {
+      cursor: grabbing;
+      transition: none;
+      /* Disable transition during drag for smoothness */
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      color: white;
+      font-size: 40px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 1001;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>实时图片展示</h1>
+  <div id="status" class="disconnected">连接中...</div>
+
+  <div class="image-container" id="image-container">
+    <div class="img-box">
+      <span id="label-0">图片 1</span>
+      <img id="img-0" alt="等待接收..." />
+    </div>
+    <div class="img-box">
+      <span id="label-1">图片 2</span>
+      <img id="img-1" alt="等待接收..." />
+    </div>
+    <div class="img-box">
+      <span id="label-2">图片 3</span>
+      <img id="img-2" alt="等待接收..." />
+    </div>
+    <div class="img-box">
+      <span id="label-3">图片 4</span>
+      <img id="img-3" alt="等待接收..." />
+    </div>
+  </div>
+  <div class="timestamp" id="last-update">最近更新: 尚未接收</div>
+
+  <!-- The Modal -->
+  <div id="image-modal" class="modal">
+    <span class="modal-close" id="modal-close">&times;</span>
+    <img id="modal-img" src="" alt="大图预览">
+  </div>
+
+  <script>
+    const WS_URL = 'ws://127.0.0.1:21039/ws';
+    const statusEl = document.getElementById('status');
+    const lastUpdateEl = document.getElementById('last-update');
+
+    function connect() {
+      const ws = new WebSocket(WS_URL);
+
+      ws.onopen = () => {
+        statusEl.textContent = '已连接到服务器';
+        statusEl.className = 'connected';
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+
+          if (data.images && Array.isArray(data.images)) {
+            data.images.forEach((imgBase64, index) => {
+              if (index < 4) {
+                const imgEl = document.getElementById(`img-${index}`);
+                const labelEl = document.getElementById(`label-${index}`);
+                if (imgEl && imgBase64) {
+                  imgEl.src = imgBase64;      // 接收到图片则更换 src 实现刷新
+                  labelEl.style.display = 'none'; // 隐藏占位文本
+                }
+              }
+            });
+
+            const now = new Date();
+            lastUpdateEl.textContent = '最近更新: ' + now.toLocaleTimeString();
+          }
+        } catch (e) {
+          console.error('解析 WebSocket 数据失败:', e);
+        }
+      };
+
+      ws.onclose = () => {
+        statusEl.textContent = '连接已断开，尝试重连...';
+        statusEl.className = 'disconnected';
+        setTimeout(connect, 3000); // 3秒后自动重连
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket 错误:', error);
+        ws.close();
+      };
+    }
+
+    // 建立连接
+    connect();
+
+    // ----------------- 图片放大、拖拽、缩放逻辑 -----------------
+    const modal = document.getElementById('image-modal');
+    const modalImg = document.getElementById('modal-img');
+    const modalClose = document.getElementById('modal-close');
+
+    let scale = 1;
+    let panning = false;
+    let pointX = 0;
+    let pointY = 0;
+    let startX = 0;
+    let startY = 0;
+
+    function setTransform() {
+      modalImg.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
+    }
+
+    function resetTransform() {
+      scale = 1;
+      pointX = 0;
+      pointY = 0;
+      setTransform();
+    }
+
+    // 点击四宫格里的图片打开弹窗
+    document.querySelectorAll('.img-box img').forEach(img => {
+      img.addEventListener('click', (e) => {
+        if (e.target.src && !e.target.src.endsWith('等待接收...')) {
+          modal.classList.add('active');
+          modalImg.src = e.target.src;
+          resetTransform();
+        }
+      });
+    });
+
+    // 动态接收新图片时同步为新图片添加点击事件只需依赖原 DOM 即可
+    // 因为我们在循环 img 标签挂载了点击事件，src 改变时依然有效
+
+    // 关闭弹窗
+    modalClose.addEventListener('click', () => {
+      modal.classList.remove('active');
+    });
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.remove('active');
+      }
+    });
+
+    // 鼠标按下：开始拖拽
+    modalImg.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      panning = true;
+      startX = e.clientX - pointX;
+      startY = e.clientY - pointY;
+    });
+
+    // 鼠标移动：拖拽中
+    window.addEventListener('mousemove', (e) => {
+      if (!panning) return;
+      pointX = e.clientX - startX;
+      pointY = e.clientY - startY;
+      setTransform();
+    });
+
+    // 鼠标抬起：结束拖拽
+    window.addEventListener('mouseup', () => {
+      panning = false;
+    });
+
+    // 鼠标滚轮：缩放
+    modalImg.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      // 每次滚动改变的倍率，可按需微调
+      const delta = Math.sign(e.deltaY) > 0 ? -0.15 : 0.15;
+      const newScale = scale + delta;
+
+      // 限制缩放级别 (支持 0.3 倍缩小 到 5 倍放大)
+      if (newScale >= 0.3 && newScale <= 5) {
+        scale = newScale;
+        setTransform();
+      }
+    }, { passive: false });
+
+  </script>
+</body>
+
+</html>

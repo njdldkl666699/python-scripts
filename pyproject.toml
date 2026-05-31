@@ -1,14 +1,16 @@
 [project]
-name = "thunder-link-parse"
-version = "0.1.0"
-description = "Add your description here"
+name = "pjsk-mysekai-xray"
+version = "1.0.0-beta.1"
+description = "基于命令行或mitmproxy的Project Sekai Mysekai数据解析和可视化工具"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.12"
 dependencies = [
     "loguru>=0.7.3",
+    "mitmproxy>=12.2.3",
     "msgpack>=1.1.2",
     "msgspec>=0.20.0",
     "pillow>=12.1.1",
     "pycryptodome>=3.23.0",
     "python-dotenv>=1.2.2",
+    "websockets>=16.0",
 ]
