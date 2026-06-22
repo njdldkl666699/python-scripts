@@ -1,6 +1,10 @@
+__pycache__/
+.venv/
+
 .env
+
 result*
-run.sh
-response*
+*response*
+
 papers/
 reports/
