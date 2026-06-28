@@ -12,7 +12,7 @@
 python thunder_link_parse.py thunder://<thunder_link>
 ```
 
-## Markdown Table of Contents
+## markdown_toc
 
 用于从 Markdown 文件中提取1-6级标题，并生成一个可跳转的目录列表。
 
@@ -34,7 +34,7 @@ python markdown_toc.py <markdown_file> > toc.md
 python batch_paper_analyzer.py <paper_directory> -O <output_directory>
 ```
 
-## watchdog
+## github_watchdog
 
 轮询 GitHub 仓库指定分支的最新提交。发现远端提交与本地 `HEAD` 不一致时，执行 `git pull --ff-only`，成功后重启 core process。
 
@@ -70,7 +70,23 @@ WATCHDOG__CORE_COMMAND=uv run python app.py
 ### Usage
 
 ```bash
-python watchdog.py
+python github_watchdog.py
 ```
 
 停止 watchdog 时会同时尝试停止 core process。Windows 下使用 `taskkill /T` 停止进程树；Linux/macOS 下使用进程组信号停止。
+
+## pydantic_FileSyncedModel
+
+提供一个可与 JSON 文件同步的 Pydantic `BaseModel` 基类，并使用 `watchdog` 监听模型文件变更，实现配置模型的热加载。
+
+`FileSyncedModel.from_file()` 会从指定 JSON 文件加载模型；当文件不存在时，会使用模型默认值创建文件。修改模型字段后，需要调用 `save()` 显式写回文件。文件内容被外部编辑并保存时，`ModelReloadHandler` 会比较文件 MD5，确认变更后重新加载模型，并更新 `Ptr` 中持有的当前模型实例。
+
+脚本内置了 `ExampleModel` 示例，默认监听当前目录下的 `example_model.json`。
+
+### Usage
+
+```bash
+python pydantic_FileSyncedModel.py
+```
+
+运行后会在当前目录生成或读取 `example_model.json`。编辑并保存该文件后，控制台会输出重新加载日志。
