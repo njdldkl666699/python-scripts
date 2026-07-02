@@ -26,6 +26,8 @@ class WatchdogConfig(BaseModel):
     """轮询 GitHub 仓库更新的时间间隔，单位为秒，必须大于 0"""
     core_command: str = "nb run"
     """要作为 core process 启动的命令，可包含参数"""
+    user_agent: str = "watchdog"
+    """User-Agent 字段，用于标识请求来源"""
 
 
 class WatchdogSettings(BaseSettings):
@@ -38,13 +40,10 @@ class WatchdogSettings(BaseSettings):
     watchdog: WatchdogConfig = WatchdogConfig()
 
 
-cfg = WatchdogSettings().watchdog
-
-
-def _build_github_headers(token: str) -> dict[str, str]:
+def _build_github_headers(token: str, user_agent: str) -> dict[str, str]:
     headers = {
         "Accept": "application/vnd.github+json",
-        "User-Agent": "watchdog",
+        "User-Agent": user_agent,
     }
     if token:
         headers["Authorization"] = f"Bearer {token}"
@@ -312,7 +311,7 @@ class WatchdogService:
 
         shutdown_event = self._create_shutdown_event()
         timeout = Timeout(10.0)
-        headers = _build_github_headers(self._config.github_token)
+        headers = _build_github_headers(self._config.github_token, self._config.user_agent)
 
         await self._core.start()
         try:
@@ -393,6 +392,7 @@ class WatchdogService:
 
 
 async def main() -> None:
+    cfg = WatchdogSettings().watchdog
     await WatchdogService(cfg).run()
 
 
