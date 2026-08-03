@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import asyncio
 import json
 import os
@@ -73,7 +74,7 @@ async def _wait_for_process_exit(
 
     try:
         await asyncio.wait_for(process.wait(), timeout=timeout)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         return False
     return True
 
@@ -81,7 +82,7 @@ async def _wait_for_process_exit(
 async def _wait_for_shutdown(event: asyncio.Event, timeout: int) -> None:
     try:
         await asyncio.wait_for(event.wait(), timeout=timeout)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         return
 
 
@@ -162,10 +163,6 @@ class CoreProcessManager:
             start_new_session=True,
         )
 
-    async def restart(self) -> None:
-        await self.stop()
-        await self.start()
-
     async def ensure_running(self) -> None:
         if self._process is None:
             await self.start()
@@ -200,7 +197,7 @@ class CoreProcessManager:
             return
 
         logger.warning("core 进程组未在规定时间内退出，准备强制结束")
-        self._send_process_group_signal(pgid, getattr(signal, "SIGKILL"))
+        self._send_process_group_signal(pgid, signal.SIGKILL)
 
         if not await self._wait_for_process_group_exit(process, pgid, timeout=30):
             logger.warning("core 进程组可能仍有残留进程")
@@ -247,14 +244,14 @@ class CoreProcessManager:
     @staticmethod
     def _get_process_group_id(process: asyncio.subprocess.Process) -> int:
         try:
-            return getattr(os, "getpgid")(process.pid)
+            return os.getpgid(process.pid)
         except ProcessLookupError:
             return process.pid
 
     @staticmethod
     def _send_process_group_signal(pgid: int, sig: int) -> bool:
         try:
-            getattr(os, "killpg")(pgid, sig)
+            os.killpg(pgid, sig)
         except ProcessLookupError:
             return False
         return True
@@ -285,7 +282,7 @@ class CoreProcessManager:
             if process.returncode is None:
                 try:
                     await asyncio.wait_for(process.wait(), timeout=step)
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     pass
             else:
                 await asyncio.sleep(step)
@@ -386,9 +383,21 @@ class WatchdogService:
         if self._last_reported_sha != remote_sha:
             logger.info("发现新提交：{}（本地：{}）", remote_sha, local_sha)
 
-        if await self._git.pull_latest():
-            await self._core.restart()
+        await self._stop_pull_start()
         self._last_reported_sha = remote_sha
+
+    async def _stop_pull_start(self) -> None:
+        """停止主进程 → 拉取最新代码 → 重新启动主进程。
+
+        先等待主进程完全关闭后再执行 git pull，避免在主进程运行时更新代码，
+        确保代码更新的安全性和稳定性。
+        """
+        await self._core.stop()
+        if await self._git.pull_latest():
+            logger.info("代码更新成功，正在重新启动主进程")
+        else:
+            logger.warning("git pull 失败，将以现有代码重新启动主进程")
+        await self._core.start()
 
 
 async def main() -> None:
