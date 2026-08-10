@@ -91,3 +91,23 @@ python pydantic_FileSyncedModel.py
 ```
 
 运行后会在当前目录生成或读取 `example_model.json`。编辑并保存该文件后，控制台会输出重新加载日志。
+
+## merge_minecraft_assets
+
+解压 Minecraft 客户端版本 JAR，并根据资源索引将 `.minecraft/assets/objects/` 中的散列资源合并到输出目录。
+
+散列资源会写入输出目录下的 `assets/<资源路径>`，并覆盖 JAR 中的同路径文件。脚本会检查资源是否缺失、文件大小是否正确，并在复制时校验 SHA-1。已有输出目录不会被清空，其中的同名文件可能被覆盖。
+
+### Usage
+
+```bash
+python merge_minecraft_assets.py <.minecraft根目录> <资源索引文件名或路径> <版本JAR路径> [-o <输出目录>]
+```
+
+例如：
+
+```bash
+python merge_minecraft_assets.py /path/to/.minecraft 32.json versions/26.2/26.2.jar
+```
+
+仅传入资源索引文件名时，脚本会在 `<.minecraft根目录>/assets/indexes/` 中查找。相对版本 JAR 路径会基于 `.minecraft` 根目录解析。未指定 `-o` 时，输出目录默认为当前工作目录下以 JAR 文件名推断出的版本号目录，例如 `./26.2/`。
