@@ -29,7 +29,7 @@ def reward_matches(reward: dict, lookup: dict[str, list[int]]) -> bool:
         candidates = lookup.get(category)
         if not candidates:
             continue
-        for item_id in items.keys():
+        for item_id in items:
             try:
                 if int(item_id) in candidates:
                     return True

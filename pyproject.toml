@@ -1,6 +1,6 @@
 [project]
 name = "pjsk-mysekai-xray"
-version = "1.0.0"
+version = "1.0.1"
 description = "基于命令行或mitmproxy的Project Sekai Mysekai数据解析和可视化工具"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -18,4 +18,4 @@ dependencies = [
 mitmproxy = ["mitmproxy>=12.0.0"]
 
 [tool.ruff.lint]
-ignore = ["BLE001"]
+ignore = ["BLE001", "PLR2044"]

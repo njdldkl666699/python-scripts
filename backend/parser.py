@@ -40,7 +40,7 @@ def parse_map(user_data: dict):
 
         for drop in mp.userMysekaiSiteHarvestResourceDrops:
             pos = (drop.positionX, drop.positionZ)
-            for i in range(0, len(mp_detail)):
+            for i in range(len(mp_detail)):
                 if mp_detail[i]["location"] != pos:
                     continue
 
