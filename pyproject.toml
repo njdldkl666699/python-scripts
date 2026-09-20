@@ -1,6 +1,6 @@
 [project]
 name = "pjsk-mysekai-xray"
-version = "1.0.1"
+version = "1.1.0"
 description = "基于命令行或mitmproxy的Project Sekai Mysekai数据解析和可视化工具"
 readme = "README.md"
 requires-python = ">=3.12"

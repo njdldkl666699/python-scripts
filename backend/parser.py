@@ -11,11 +11,51 @@ from .config import SITE_ID
 from .structs import Map
 
 
+def _coerce_map(raw) -> dict:
+    """新版响应把 harvest map 压缩成了位置数组，这里还原成旧版字典结构。
+
+    新版格式（按字段顺序 positional 编码）：
+      [mysekaiSiteId, fixtures, drops]
+      fixture: [id, posX, posZ, hp, status, ...新增未知字段]
+      drop:    [resourceType, resourceId, posX, posZ, hp, seq, status, quantity, ...新增未知字段]
+    """
+    if isinstance(raw, dict):
+        return raw
+
+    site_id, fixtures, drops = raw
+    return {
+        "mysekaiSiteId": site_id,
+        "userMysekaiSiteHarvestFixtures": [
+            {
+                "mysekaiSiteHarvestFixtureId": f[0],
+                "positionX": f[1],
+                "positionZ": f[2],
+                "hp": f[3],
+                "userMysekaiSiteHarvestFixtureStatus": f[4],
+            }
+            for f in fixtures or []
+        ],
+        "userMysekaiSiteHarvestResourceDrops": [
+            {
+                "resourceType": d[0],
+                "resourceId": d[1],
+                "positionX": d[2],
+                "positionZ": d[3],
+                "hp": d[4],
+                "seq": d[5],
+                "mysekaiSiteHarvestResourceDropStatus": d[6],
+                "quantity": d[7],
+            }
+            for d in drops or []
+        ],
+    }
+
+
 def parse_map(user_data: dict):
     assert user_data["updatedResources"]["userMysekaiHarvestMaps"]
 
     harvest_maps: list[Map] = [
-        msgspec.json.decode(msgspec.json.encode(mp), type=Map)
+        msgspec.convert(_coerce_map(mp), type=Map)
         for mp in user_data["updatedResources"]["userMysekaiHarvestMaps"]
     ]
 
