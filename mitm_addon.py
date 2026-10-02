@@ -13,6 +13,7 @@ import base64
 import json
 import os
 import re
+import webbrowser
 from pathlib import Path
 
 import websockets
@@ -31,6 +32,8 @@ TARGET_PATH_REGEX = os.getenv("TARGET_PATH_REGEX", "mysekai")
 
 WS_HOST = "0.0.0.0"
 WS_PORT = 21039
+# 启动后是否自动用默认浏览器打开 index.html（设为 0/false 可关闭）
+AUTO_OPEN_BROWSER = os.getenv("AUTO_OPEN_BROWSER", "1").lower() not in ("0", "false", "no")
 # ========================================
 
 
@@ -43,9 +46,28 @@ class WebSocketServer:
         try:
             self.server = await websockets.serve(self.handler, WS_HOST, WS_PORT)
             logger.info(f"WebSocket server started at ws://{WS_HOST}:{WS_PORT}/ws")
+            if AUTO_OPEN_BROWSER:
+                asyncio.create_task(self.open_frontend())
             await self.server.wait_closed()
         except Exception as e:
             logger.error(f"Failed to start WebSocket server: {e}")
+
+    @staticmethod
+    async def open_frontend():
+        # webbrowser.open 可能阻塞（等待外部命令返回），放到线程里执行以免卡住事件循环
+        try:
+            index_path = Path(__file__).resolve().parent / "index.html"
+            if not index_path.exists():
+                logger.warning(f"index.html not found at {index_path}, skip opening browser.")
+                return
+            url = index_path.as_uri()
+            opened = await asyncio.to_thread(webbrowser.open, url)
+            if opened:
+                logger.info(f"Opened frontend in default browser: {url}")
+            else:
+                logger.warning("Failed to open default browser, please open index.html manually.")
+        except Exception as e:
+            logger.error(f"Error opening browser: {e}")
 
     def stop(self):
         if self.server:

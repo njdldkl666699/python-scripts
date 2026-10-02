@@ -62,7 +62,7 @@ AES_IV=your_aes_iv
    请在终端启动 mitmdump（或 mitmweb）并挂上脚本：
    
    ```bash
-   mitmdump -s mitm_addon.py
+   mitmdump -s mitm_addon.py --set stream_large_bodies=1m
    ```
    
    启动后，核心代理将开启（默认端口 `8080`），同时启动一个内部 WebSocket 数据推送服务（默认端口 `21039`）。
