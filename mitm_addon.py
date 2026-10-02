@@ -12,6 +12,7 @@ import asyncio
 import base64
 import json
 import os
+import re
 from pathlib import Path
 
 import websockets
@@ -23,9 +24,10 @@ from backend.parser import decrypt, parse_map, unmsgpack
 from backend.renderer import render_scene_images
 
 # =============== 配置区域 ===============
-# 需要拦截的 API 路径关键字（例如 /api/mysekai 这个词）
-# 可以通过设置环境变量 TARGET_PATH_KEYWORD 来改变
-TARGET_PATH_KEYWORD = os.getenv("TARGET_PATH_KEYWORD", "mysekai")
+# 需要拦截的 API 路径的正则表达式（re.search，对含 query string 的完整 path 匹配）
+# 例如：isForceAllReloadOnlyMysekai=True|mysekai/birthday-party/[0-9]+/delivery
+# 可以通过设置环境变量 TARGET_PATH_REGEX 来改变
+TARGET_PATH_REGEX = os.getenv("TARGET_PATH_REGEX", "mysekai")
 
 WS_HOST = "0.0.0.0"
 WS_PORT = 21039
@@ -79,7 +81,16 @@ class MysekaiAddon:
     def __init__(self):
         self.ws_server = WebSocketServer()
         self.ws_task = None
-        self.target_path = TARGET_PATH_KEYWORD
+        try:
+            self.target_pattern = re.compile(TARGET_PATH_REGEX)
+        except re.error as e:
+            # 容错：值不是合法正则时，退化为字面子串匹配
+            logger.warning(
+                "TARGET_PATH_REGEX 不是合法正则（{}），退化为字面子串匹配：{}",
+                e,
+                TARGET_PATH_REGEX,
+            )
+            self.target_pattern = re.compile(re.escape(TARGET_PATH_REGEX))
 
     def load(self, loader):
         # mitmproxy 加载插件时启动 asyncio 的 websocket 任务
@@ -95,7 +106,7 @@ class MysekaiAddon:
         if not flow.request.path or not flow.response:
             return
 
-        if self.target_path in flow.request.path:
+        if self.target_pattern.search(flow.request.path):
             logger.info(f"Intercepted target response: {flow.request.path}")
 
             raw_payload = flow.response.content
@@ -114,7 +125,7 @@ class MysekaiAddon:
                 decoded = unmsgpack(decrypted)
                 try:
                     return parse_map(decoded)
-                except AssertionError:
+                except (AssertionError, KeyError):
                     raise ValueError("响应中不包含 harvest map 数据。")
 
             harvest = await asyncio.to_thread(decode_and_parse, raw_payload)

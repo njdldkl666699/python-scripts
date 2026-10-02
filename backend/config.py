@@ -116,24 +116,6 @@ ITEM_TEXTURES = {
         64: "icon/Texture2D/item_mineral_9.png",
         65: "icon/Texture2D/item_mineral_10.png",
         66: "icon/Texture2D/item_junk_13.png",
-        67: "icon/Texture2D/item_birthday_flower.png",
-        68: "icon/Texture2D/item_birthday_flower.png",
-        69: "icon/Texture2D/item_birthday_flower.png",
-        70: "icon/Texture2D/item_birthday_flower.png",
-        71: "icon/Texture2D/item_birthday_flower.png",
-        72: "icon/Texture2D/item_birthday_flower.png",
-        73: "icon/Texture2D/item_birthday_flower.png",
-        74: "icon/Texture2D/item_birthday_flower.png",
-        75: "icon/Texture2D/item_birthday_flower.png",
-        77: "icon/Texture2D/item_birthday_flower.png",
-        83: "icon/Texture2D/item_birthday_flower.png",
-        84: "icon/Texture2D/item_birthday_flower.png",
-        85: "icon/Texture2D/item_birthday_flower.png",
-        88: "icon/Texture2D/item_birthday_flower.png",
-        89: "icon/Texture2D/item_birthday_flower.png",
-        90: "icon/Texture2D/item_birthday_flower.png",
-        91: "icon/Texture2D/item_birthday_flower.png",
-        92: "icon/Texture2D/item_birthday_flower.png",
         93: "icon/Texture2D/item_junk_14.png",
     },
     "mysekai_item": {
@@ -167,6 +149,8 @@ ITEM_TEXTURES = {
         17: "icon/Texture2D/material17.png",  # 心愿种子
         170: "icon/Texture2D/material170.png",  # 世界碎片
         173: "icon/Texture2D/material173.png",  # 拓麻歌子碎片
+        # 生日花
+        **{i: "icon/Texture2D/item_birthday_flower.png" for i in range(176, 200)},
         201: "icon/Texture2D/material201.png",  # 苍蓝旋律水滴
     },
 }
@@ -177,11 +161,12 @@ RARE_ITEM = {
     "mysekai_item": [7],
     "mysekai_music_record": [],
     "mysekai_fixture": [118, 119, 120, 121],
+    "material": [i for i in range(176, 200)],
 }
 
 
 SUPER_RARE_ITEM = {
-    "mysekai_material": [5, 12, 20, 24, *range(67, 93)],
+    "mysekai_material": [5, 12, 20, 24],
     "mysekai_item": [],
     "mysekai_fixture": [],
     "mysekai_music_record": [],
