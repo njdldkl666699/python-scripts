@@ -161,7 +161,7 @@ RARE_ITEM = {
     "mysekai_item": [7],
     "mysekai_music_record": [],
     "mysekai_fixture": [118, 119, 120, 121],
-    "material": [i for i in range(176, 200)],
+    # "material": [i for i in range(176, 200)],
 }
 
 
