@@ -59,7 +59,7 @@ AES_IV=your_aes_iv
 利用内置代理脚本，可在触发游戏数据的瞬间解密并渲染出来。
 
 1. **启动代理服务**
-   请在终端启动 mitmdump（或 mitmweb）并挂上脚本：
+   请在终端启动`mitmdump`并挂上脚本：
    
    ```bash
    mitmdump -s mitm_addon.py --set stream_large_bodies=1m
@@ -67,9 +67,13 @@ AES_IV=your_aes_iv
    
    启动后，核心代理将开启（默认端口 `8080`），同时启动一个内部 WebSocket 数据推送服务（默认端口 `21039`）。
 
+   也可以启动`mitmweb`以便在浏览器中查看；启动`mitmproxy`以TUI方式查看。
+
 2. **启动前端监控**
    无需构建工具，双击直接在浏览器中打开项目根目录下的 `index.html`。
    显示“已连接到服务器”即代表联通。
+
+   插件在启动websocket后也会自动使用系统默认浏览器打开 `index.html`，无需手动操作。
 
 3. **抓包测试**
    配置好手机或电脑环境的代理（指向 `127.0.0.1:8080`，并安装信任了 mitm 证书）。当您在游戏中获取/刷新数据，后端插件将捕获包含 `mysekai`（可通过改环境变量 `TARGET_PATH_REGEX` 配置）过滤路径的 API。随后进行自动流式解密及绘图，再通过 WebSocket 发送回前端，此时网页端的 4 张场景掉落图就会被瞬间更新覆盖。

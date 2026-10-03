@@ -117,6 +117,9 @@ ITEM_TEXTURES = {
         65: "icon/Texture2D/item_mineral_10.png",
         66: "icon/Texture2D/item_junk_13.png",
         93: "icon/Texture2D/item_junk_14.png",
+        94: "icon/Texture2D/item_junk_15.png",
+        95: "icon/Texture2D/item_junk_16.png",
+        96: "icon/Texture2D/item_junk_17.png",
     },
     "mysekai_item": {
         7: "icon/Texture2D/item_blueprint_fragment.png",
@@ -149,9 +152,11 @@ ITEM_TEXTURES = {
         17: "icon/Texture2D/material17.png",  # 心愿种子
         170: "icon/Texture2D/material170.png",  # 世界碎片
         173: "icon/Texture2D/material173.png",  # 拓麻歌子碎片
-        # 生日花
-        **{i: "icon/Texture2D/item_birthday_flower.png" for i in range(176, 200)},
+        # 庆典甘露
+        **{i: "icon/Texture2D/birthday_party_delivery.png" for i in range(176, 200)},
         201: "icon/Texture2D/material201.png",  # 苍蓝旋律水滴
+        216: "icon/Texture2D/material216.png",  # 福运纸片
+        217: "icon/Texture2D/material217.png",  # 财运纸片
     },
 }
 
@@ -161,7 +166,6 @@ RARE_ITEM = {
     "mysekai_item": [7],
     "mysekai_music_record": [],
     "mysekai_fixture": [118, 119, 120, 121],
-    # "material": [i for i in range(176, 200)],
 }
 
 
