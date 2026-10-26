@@ -18,7 +18,7 @@ from pathlib import Path
 
 import websockets
 from loguru import logger
-from mitmproxy import http
+from mitmproxy import http, tls
 
 from backend.config import AES_IV, AES_KEY
 from backend.parser import decrypt, parse_map, unmsgpack
@@ -29,6 +29,12 @@ from backend.renderer import render_scene_images
 # 例如：isForceAllReloadOnlyMysekai=True|mysekai/birthday-party/[0-9]+/delivery
 # 可以通过设置环境变量 TARGET_PATH_REGEX 来改变
 TARGET_PATH_REGEX = os.getenv("TARGET_PATH_REGEX", "mysekai")
+
+# 仅对这些域名（含任意子域名）做 MITM 解密；其余域名的 TLS 连接一律直连透传。
+# 直连时客户端直接与目标服务器握手、拿到真实证书，可避免证书固定等校验失败。
+# 逗号分隔多个域名，例如：prod-jp.repo.example.org,api.example.com
+# 留空（默认）表示不启用域名过滤，维持原有的“全部拦截”行为。
+INTERCEPT_DOMAINS = os.getenv("INTERCEPT_DOMAINS", "")
 
 WS_HOST = "0.0.0.0"
 WS_PORT = 21039
@@ -114,6 +120,11 @@ class MysekaiAddon:
             )
             self.target_pattern = re.compile(re.escape(TARGET_PATH_REGEX))
 
+        # 域名白名单：小写化并去除首部点号；未配置时为空列表（= 不过滤，全部拦截）
+        self.intercept_domains = [
+            d.strip().lower().lstrip(".") for d in INTERCEPT_DOMAINS.split(",") if d.strip()
+        ]
+
     def load(self, loader):
         # mitmproxy 加载插件时启动 asyncio 的 websocket 任务
         self.ws_task = asyncio.create_task(self.ws_server.start())
@@ -122,6 +133,25 @@ class MysekaiAddon:
         self.ws_server.stop()
         if self.ws_task:
             self.ws_task.cancel()
+
+    def should_intercept_host(self, host: str) -> bool:
+        """判断主机名是否命中 INTERCEPT_DOMAINS 白名单（精确匹配或任意子域名）。"""
+        if not self.intercept_domains:
+            return True  # 未配置白名单时不过滤，保持原有行为
+        return any(host == d or host.endswith(f".{d}") for d in self.intercept_domains)
+
+    async def tls_clienthello(self, data: tls.ClientHelloData):
+        """TLS 握手阶段按 SNI 决定是否 MITM。
+
+        白名单外的域名设置 ignore_connection，mitmproxy 会把该连接退化为普通 TCP 隧道：
+        客户端直接与目标服务器完成握手、拿到真实证书，证书固定等校验因此不受影响。
+        """
+        sni = (data.client_hello.sni or "").lower()
+        if not self.should_intercept_host(sni):
+            data.ignore_connection = True
+            logger.debug(
+                f"TLS passthrough: {sni or '<no SNI>'} 不在 INTERCEPT_DOMAINS 白名单内，直连。"
+            )
 
     async def response(self, flow: http.HTTPFlow):
         # 拦截对应的请求

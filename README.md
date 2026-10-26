@@ -52,6 +52,12 @@ AES_KEY=your_aes_key
 AES_IV=your_aes_iv
 ```
 
+另有可选环境变量，用于mitmproxy插件的拦截配置：
+
+- `TARGET_PATH_REGEX`：需要拦截分析的 API 路径正则。
+- `INTERCEPT_DOMAINS`：域名白名单，逗号分隔、自动匹配子域名。设置后仅对这些域名做 MITM 解密，其余域名的 TLS 连接一律直连透传；留空（默认）则不过滤、全部拦截。
+- `AUTO_OPEN_BROWSER`：是否在启动 mitmproxy 后自动打开浏览器访问前端页面（index.html），1 为开启，0/false/no 为关闭。
+
 ---
 
 ## 运行模式一：实时拦截与可视化 (mitmproxy 插件)
@@ -76,7 +82,27 @@ AES_IV=your_aes_iv
    插件在启动websocket后也会自动使用系统默认浏览器打开 `index.html`，无需手动操作。
 
 3. **抓包测试**
-   配置好手机或电脑环境的代理（指向 `127.0.0.1:8080`，并安装信任了 mitm 证书）。当您在游戏中获取/刷新数据，后端插件将捕获包含 `mysekai`（可通过改环境变量 `TARGET_PATH_REGEX` 配置）过滤路径的 API。随后进行自动流式解密及绘图，再通过 WebSocket 发送回前端，此时网页端的 4 张场景掉落图就会被瞬间更新覆盖。
+   在手机或电脑上配置指向mitmproxy的网络代理，并安装信任了 mitm 证书。当您在游戏中获取数据，后端插件将捕获包含 `TARGET_PATH_REGEX` 过滤路径的 API。随后进行自动流式解密及绘图，再通过 WebSocket 发送回前端，此时网页端的 4 张场景掉落图就会被瞬间更新覆盖。
+
+   > 提示：若经过代理的其他流量触发证书固定、校验等报错，可设置环境变量 `INTERCEPT_DOMAINS`，参见上文环境变量说明。
+
+### 免安装证书抓包（`--emudhra`）
+
+mitmproxy 12.3（*eMudhra Edition*）新增了 `--emudhra` 开关：不再使用自带的 mitmproxy CA，而是改用泄漏的 eMudhra 中间 CA 私钥为拦截流量签发证书。信任这些根证书的设备**无需手动安装任何证书**即可直接抓包：
+
+```bash
+mitmdump -s mitm_addon.py --set stream_large_bodies=1m --emudhra
+```
+
+| 参数 | 适用场景 |
+| --- | --- |
+| `--emudhra` | 优先 `emSign ECC Root CA - G3`（2018）签名链，适用于现代信任库（默认）。 |
+| `--emudhra-old` | 优先 Sectigo `AAA Certificate Services`（2004）交叉签名链，适用于只信任 pre-2021 旧信任库的老旧 OpenSSL 客户端（此类客户端只能处理 TLS 握手中发送的第一条证书链）。 |
+
+注意事项：
+
+- 仅对信任库尚未移除 eMudhra 根证书的客户端生效；设备厂商推送信任库更新后即失效，属于临时应急手段。
+- 建议配合环境变量 `INTERCEPT_DOMAINS` 白名单使用，只对目标域名做 MITM。
 
 ---
 
