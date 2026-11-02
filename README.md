@@ -56,6 +56,9 @@ AES_IV=your_aes_iv
 
 - `TARGET_PATH_REGEX`：需要拦截分析的 API 路径正则。
 - `INTERCEPT_DOMAINS`：域名白名单，逗号分隔、自动匹配子域名。设置后仅对这些域名做 MITM 解密，其余域名的 TLS 连接一律直连透传；留空（默认）则不过滤、全部拦截。
+- `WS_HOST`：WebSocket 推送服务监听地址，默认 `0.0.0.0`。
+- `WS_PORT`：WebSocket 推送服务端口（1-65535），默认 `21039`；非法或越界值会回退到默认值。
+  - 前端页面可通过 URL 参数指向非默认地址：`index.html?host=192.168.1.5&port=30000`，或用 `index.html?ws=ws://192.168.1.5:3000/ws` 直接指定完整地址。
 - `AUTO_OPEN_BROWSER`：是否在启动 mitmproxy 后自动打开浏览器访问前端页面（index.html），1 为开启，0/false/no 为关闭。
 
 ---

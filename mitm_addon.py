@@ -36,8 +36,19 @@ TARGET_PATH_REGEX = os.getenv("TARGET_PATH_REGEX", "mysekai")
 # 留空（默认）表示不启用域名过滤，维持原有的“全部拦截”行为。
 INTERCEPT_DOMAINS = os.getenv("INTERCEPT_DOMAINS", "")
 
-WS_HOST = "0.0.0.0"
+WS_HOST = os.getenv("WS_HOST", "0.0.0.0")
+# WebSocket 服务端口（1-65535），非法或越界值回退到默认值 21039
 WS_PORT = 21039
+try:
+    _env_port = int(os.getenv("WS_PORT", ""))
+    if 1 <= _env_port <= 65535:
+        WS_PORT = _env_port
+    else:
+        logger.warning(f"WS_PORT={_env_port} 超出有效范围 1-65535，使用默认值 {WS_PORT}。")
+except ValueError:
+    _env_ws_port = os.getenv("WS_PORT", "")
+    if _env_ws_port:
+        logger.warning(f"WS_PORT={_env_ws_port!r} 不是合法整数，使用默认值 {WS_PORT}。")
 # 启动后是否自动用默认浏览器打开 index.html（设为 0/false 可关闭）
 AUTO_OPEN_BROWSER = os.getenv("AUTO_OPEN_BROWSER", "1").lower() not in ("0", "false", "no")
 # ========================================
