@@ -15,13 +15,16 @@
 {
   "type": "images_update",
   "images": [
-    "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA...",
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhE...",
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhE...",
-    "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA..."
+    "data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==",
+    "data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==",
+    "data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==",
+    "data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA=="
   ]
 }
 ```
+
+当前后端统一推送**有损 WebP**（quality=90）：单次 4 张 1920x1080 约 1.2MB（base64 后约 1.6MB），
+远小于 PNG 方案（约 11.5MB）。前端 `<img>` 对 WebP Data URL 原生支持，无需额外处理。
 
 ### 2.2 字段说明
 - `type`: `string` (可选) - 消息的类型标识。这里标识为 `images_update`，以便未来如果有其他的事件类型（比如报错或者心跳消息）可以进行区分。

@@ -22,7 +22,7 @@ from mitmproxy import http, tls
 
 from backend.config import AES_IV, AES_KEY
 from backend.parser import decrypt, parse_map, unmsgpack
-from backend.renderer import render_scene_images
+from backend.renderer import render_scene_images_webp
 
 # =============== 配置区域 ===============
 # 需要拦截的 API 路径的正则表达式（re.search，对含 query string 的完整 path 匹配）
@@ -193,9 +193,8 @@ class MysekaiAddon:
 
             harvest = await asyncio.to_thread(decode_and_parse, raw_payload)
 
-            # 2. 渲染图片（存到临时目录）
-            temp_dir = Path("result")
-            await asyncio.to_thread(render_scene_images, harvest, temp_dir)
+            # 2. 渲染图片（纯内存，不落盘；有损 WebP，体积约为 PNG 的 1/10）
+            webp_bytes = await asyncio.to_thread(render_scene_images_webp, harvest)
 
             # 3. 构造前端需要的 WebSocket Payload
             # 这里按照固定的四宫格顺序生成 Base64，与 index.html 的四宫格相对应
@@ -208,11 +207,10 @@ class MysekaiAddon:
 
             images_base64 = []
             for stub in scene_order:
-                img_path = temp_dir / f"{stub}.png"
-                if img_path.exists():
-                    img_data = await asyncio.to_thread(img_path.read_bytes)
+                img_data = webp_bytes.get(stub)
+                if img_data is not None:
                     b64_str = base64.b64encode(img_data).decode("utf-8")
-                    images_base64.append(f"data:image/png;base64,{b64_str}")
+                    images_base64.append(f"data:image/webp;base64,{b64_str}")
                 else:
                     images_base64.append("")  # 未获取到图片时，采用空字符串占位
 
